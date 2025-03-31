@@ -1,17 +1,19 @@
-const pool = require('./db');
-const { removeZCoordinate } = require('./utils');
+const pool = require('../config/db');
+const { removeZCoordinate } = require('../utils/geoUtils');
 
+// ------------------------- Função para buscar dados em formato GeoJSON -------------------------
 async function buscarGeoJSON(tabela) {
-    // 1. Buscar colunas da tabela (exceto a geometria)
     const colunasQuery = `
         SELECT column_name 
         FROM information_schema.columns 
         WHERE table_name = $1 AND column_name != 'geom';
     `;
     const colunasRes = await pool.query(colunasQuery, [tabela]);
-
-    // 2. Adicionar aspas duplas nos nomes das colunas
     const colunas = colunasRes.rows.map(row => `"${row.column_name}"`);
+
+    if (colunas.length === 0) {
+        throw new Error(`A tabela "${tabela}" não possui colunas além de 'geom'`);
+    }
 
     const selectColunas = colunas.join(', ');
 
@@ -20,13 +22,12 @@ async function buscarGeoJSON(tabela) {
         FROM "${tabela}"
     `;
 
-    // 3. Executar query e montar GeoJSON
     const { rows } = await pool.query(query);
 
     const features = rows.map(row => {
         const properties = {};
         colunas.forEach(coluna => {
-            const cleanColumn = coluna.replace(/"/g, ''); // Remove as aspas duplas no JSON final
+            const cleanColumn = coluna.replace(/"/g, '');
             properties[cleanColumn] = row[cleanColumn];
         });
 
@@ -43,13 +44,11 @@ async function buscarGeoJSON(tabela) {
     };
 }
 
+// ------------------------- Lista todas as tabelas públicas -------------------------
 async function listarTabelas() {
     const query = `
-        SELECT table_name
-        FROM information_schema.tables
-        WHERE table_schema = 'public';
+        SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';
     `;
-
     const res = await pool.query(query);
     return res.rows.map(row => row.table_name);
 }

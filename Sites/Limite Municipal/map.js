@@ -10,7 +10,7 @@ map.attributionControl.addAttribution('&copy; <a href="https://leafletjs.com/" t
 
 // URLs dos arquivos GeoJSON
 const geojsonUrl1 = 'http://localhost:3000/geojson?tabela=PMJ_Limite_municipal';
-const geojsonUrl3 = 'http://localhost:3000/geojson?tabela=Equipamentos_educacao';
+
 
 // Estilo para limites municipais (polígonos)
 const limiteMunicipalStyle = {
@@ -35,13 +35,13 @@ const educacaoStyle = {
 };
 
 // Função para carregar GeoJSONs com estilos
-function loadGeoJSON(url, style, bringToBack = false) {
+function loadGeoJSON(url, style) {
     fetch(url)
         .then(response => response.json())
         .then(data => {
-            const layer = L.geoJSON(data, {
-                style: typeof style.pointToLayer === "undefined" ? style : null,
-                pointToLayer: style.pointToLayer || null,
+            L.geoJSON(data, {
+                style: typeof style.pointToLayer === "undefined" ? style : null, // Só aplica `style` se não for ponto
+                pointToLayer: style.pointToLayer || null, // Usa `pointToLayer` se existir
                 onEachFeature: function (feature, layer) {
                     if (feature.properties) {
                         let popupContent = '<b>Informações:</b><br>';
@@ -53,13 +53,15 @@ function loadGeoJSON(url, style, bringToBack = false) {
                 }
             }).addTo(map);
 
-            if (bringToBack) layer.bringToBack(); // 👈 só funciona se o parâmetro for recebido
+            if (bringToBack) {
+                layer.bringToBack(); // empurra a camada pro fundo
+            }
         })
         .catch(error => console.error('Erro ao carregar o GeoJSON:', error));
 }
 
 // Carregar os GeoJSONs com estilos personalizados
-loadGeoJSON(geojsonUrl1, limiteMunicipalStyle, true); // Camada de polígonos
-loadGeoJSON(geojsonUrl3, educacaoStyle);  // Camada de pontos com estilo embutido
+loadGeoJSON(geojsonUrl1, limiteMunicipalStyle); // Camada de polígonos
+
 
 
