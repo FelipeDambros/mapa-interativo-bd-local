@@ -15,7 +15,7 @@ Este projeto é uma aplicação web que exibe dados geográficos diretamente do 
 │   ├── utils/              # Funções auxiliares
 │   └── server.js           # Inicialização do servidor
 │
-└── view/EquipamentosLimite/  # Frontend
+└── view/Pasta do Site/  # Frontend
     ├── index.html
     ├── map.css
     ├── pagina.css
